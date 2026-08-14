@@ -1,0 +1,403 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* ============================================================================
+   CyberLex Global — Design System  ·  v2 "Obsidian"
+   True black ground · warm-neutral ink · editorial serif display.
+   Brand/interactive colour is BONE (off-white). Hues are reserved for data
+   semantics only — so no colour ever means two things at once.
+   ========================================================================= */
+
+@theme {
+  /* ── Ground: true black, no blue shift ─────────────────────────────────── */
+  --color-void: #000000;
+  --color-abyss: #050506;
+  --color-hull: #0a0a0b;
+  --color-plate: #101011;
+  --color-riser: #17171a;
+  --color-rule: #1e1e21;
+  --color-rule-strong: #2c2c31;
+
+  /* ── Ink: warm neutral, never blue-grey ────────────────────────────────── */
+  --color-bone: #f2efe9;
+  --color-ink-100: #e8e5df;
+  --color-ink-300: #a6a29b;
+  --color-ink-500: #726e68;
+  --color-ink-700: #46433f;
+  --color-ink-900: #26241f;
+
+  /* ── Data semantics: muted, expensive — not neon ───────────────────────── */
+  --color-live: #4cc38a; /* in force */
+  --color-live-dim: #1f4d38;
+  --color-partial: #58c4bd; /* partially in force */
+  --color-partial-dim: #1d4a47;
+  --color-pending: #e3b23c; /* unnotified */
+  --color-pending-dim: #574313;
+  --color-draft: #d97757; /* bill under review */
+  --color-draft-dim: #532a1c;
+  --color-synthetic: #9e7be8; /* AI-related */
+  --color-synthetic-dim: #372a56;
+  --color-critical: #e5484d; /* severe / no coverage */
+  --color-critical-dim: #551b1e;
+  --color-null: #5f5c57; /* repealed / unresearched */
+  --color-null-dim: #2a2926;
+
+  /* ── Type ──────────────────────────────────────────────────────────────── */
+  --font-serif: var(--font-instrument-serif), ui-serif, Georgia, serif;
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* ── Elevation: black needs light, not shadow ──────────────────────────── */
+  --shadow-elev-1: 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-elev-2: 0 24px 60px -30px rgba(0, 0, 0, 1);
+  --shadow-lift: 0 0 0 1px rgba(242, 239, 233, 0.1),
+    0 30px 70px -40px rgba(0, 0, 0, 1);
+
+  /* ── Motion ────────────────────────────────────────────────────────────── */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --animate-breathe: breathe 4s var(--ease-in-out) infinite;
+  --animate-ping-slow: ping-slow 3s var(--ease-out) infinite;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+
+  @keyframes shimmer {
+    from {
+      background-position: 200% 0;
+    }
+    to {
+      background-position: -200% 0;
+    }
+  }
+
+  @keyframes breathe {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+    50% {
+      opacity: 0.9;
+    }
+  }
+  @keyframes ping-slow {
+    0% {
+      transform: scale(1);
+      opacity: 0.5;
+    }
+    70%,
+    100% {
+      transform: scale(3.2);
+      opacity: 0;
+    }
+  }
+}
+
+/* ── shadcn/ui semantic contract → Obsidian palette ──────────────────────── */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-heading: var(--font-serif);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+  --radius-2xl: 8px;
+  --radius-3xl: 12px;
+  --radius-4xl: 16px;
+}
+
+:root {
+  /* Near-square corners: rounded cards are the tell of a template. */
+  --radius: 4px;
+
+  --background: #000000;
+  --foreground: #e8e5df;
+  --card: #0a0a0b;
+  --card-foreground: #e8e5df;
+  --popover: #101011;
+  --popover-foreground: #e8e5df;
+  --primary: #f2efe9;
+  --primary-foreground: #000000;
+  --secondary: #17171a;
+  --secondary-foreground: #e8e5df;
+  --muted: #101011;
+  --muted-foreground: #726e68;
+  --accent: #17171a;
+  --accent-foreground: #f2efe9;
+  --destructive: #e5484d;
+  --border: #1e1e21;
+  --input: #1e1e21;
+  --ring: #f2efe9;
+
+  --chart-1: #4cc38a;
+  --chart-2: #58c4bd;
+  --chart-3: #e3b23c;
+  --chart-4: #9e7be8;
+  --chart-5: #e5484d;
+
+  --sidebar: #050506;
+  --sidebar-foreground: #a6a29b;
+  --sidebar-primary: #f2efe9;
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: #17171a;
+  --sidebar-accent-foreground: #e8e5df;
+  --sidebar-border: #1e1e21;
+  --sidebar-ring: #f2efe9;
+
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply font-sans;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--color-void);
+    color: var(--color-ink-100);
+    @apply antialiased;
+  }
+
+  :focus-visible {
+    outline: 1px solid var(--color-bone);
+    outline-offset: 3px;
+    border-radius: 1px;
+  }
+
+  ::selection {
+    background: var(--color-bone);
+    color: var(--color-void);
+  }
+
+  .font-mono,
+  code,
+  kbd,
+  samp {
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-rule-strong);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-ink-500);
+  }
+}
+
+/* ── Typography ──────────────────────────────────────────────────────────── */
+
+/* Editorial display — Instrument Serif. Tight, large, never bold. */
+@utility text-display {
+  font-family: var(--font-serif);
+  font-size: clamp(3rem, 8vw, 7.5rem);
+  line-height: 0.92;
+  font-weight: 400;
+  letter-spacing: -0.035em;
+}
+@utility text-display-sm {
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: -0.025em;
+}
+@utility text-serif-lead {
+  font-family: var(--font-serif);
+  font-size: clamp(1.25rem, 2vw, 1.75rem);
+  line-height: 1.35;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+@utility text-h2 {
+  font-size: 1.375rem;
+  line-height: 1.25;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+@utility text-h3 {
+  font-size: 1.0625rem;
+  line-height: 1.35;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+@utility text-body {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  letter-spacing: -0.005em;
+}
+@utility text-body-sm {
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  letter-spacing: -0.003em;
+}
+
+/* The interface's connective tissue: labels, keys, column heads. */
+@utility text-micro {
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  line-height: 1.3;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+@utility text-data-xl {
+  font-family: var(--font-mono);
+  font-size: 3.5rem;
+  line-height: 0.9;
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  font-variant-numeric: tabular-nums;
+}
+@utility text-data-lg {
+  font-family: var(--font-mono);
+  font-size: 1.375rem;
+  line-height: 1;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+@utility text-data {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+@utility text-code {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+/* ── Surfaces ────────────────────────────────────────────────────────────── */
+/* On true black, depth comes from hairlines and a single top light — not from
+   stacked translucent panels. Glass is used sparingly and only over the map. */
+@utility veil {
+  background: color-mix(in srgb, var(--color-void) 82%, transparent);
+  backdrop-filter: blur(24px) saturate(120%);
+  -webkit-backdrop-filter: blur(24px) saturate(120%);
+}
+
+/* Blur separates far less on black than on colour — content scrolling under a
+   72%-opaque veil stayed legible through it. The bottom nav sits over live
+   content and needs to read as a distinct plane, so it goes heavier. */
+@utility veil-strong {
+  background: color-mix(in srgb, var(--color-void) 96%, transparent);
+  backdrop-filter: blur(28px) saturate(120%);
+  -webkit-backdrop-filter: blur(28px) saturate(120%);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .veil,
+  .veil-strong {
+    background: var(--color-void);
+  }
+}
+
+/* Hairline that fades at both ends — replaces boxed borders. */
+@utility rule-fade {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-rule-strong) 12%,
+    var(--color-rule-strong) 88%,
+    transparent
+  );
+}
+@utility rule-fade-y {
+  background: linear-gradient(
+    180deg,
+    transparent,
+    var(--color-rule-strong) 12%,
+    var(--color-rule-strong) 88%,
+    transparent
+  );
+}
+
+/* Film grain — the only ambient texture. No grids, no scanlines. */
+@utility grain {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity: 0.022;
+}
+
+@utility measure {
+  max-width: 62ch;
+}
+
+/* Row hover: a bone marker slides in from the left edge. No card lift. */
+@utility row-mark {
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    height: 0;
+    width: 1px;
+    background: var(--color-bone);
+    transform: translateY(-50%);
+    transition: height 260ms var(--ease-out);
+  }
+  &:hover::before,
+  &[data-active="true"]::before {
+    height: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 150ms !important;
+    scroll-behavior: auto !important;
+  }
+}
