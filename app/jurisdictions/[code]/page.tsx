@@ -8,6 +8,7 @@ import { LastVerified } from "@/components/shared/last-verified";
 import { ScoreBreakdown } from "@/components/shared/score-breakdown";
 import { SourceList } from "@/components/shared/source-list";
 import { StatusBadge } from "@/components/shared/status-badge";
+import { PhaseSchedule } from "@/components/tracker/phase-schedule";
 import { Disclaimer } from "@/components/ui/disclaimer";
 import { ActionLink } from "@/components/ui/states";
 import {
@@ -16,7 +17,7 @@ import {
   getMetricsByCode,
 } from "@/lib/data";
 import { getStrictnessBand } from "@/lib/constants/thresholds";
-import { formatDate, formatMonth } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import {
   formatHours,
   formatYears,
@@ -24,7 +25,7 @@ import {
 } from "@/lib/scoring/normalize";
 import { cn } from "@/lib/utils";
 import { AI_POSTURE_LABEL, REGION_LABEL, absentLabel, isKnown } from "@/types";
-import type { Known, PhaseStep } from "@/types";
+import type { Known } from "@/types";
 
 export async function generateStaticParams() {
   const codes = await getJurisdictionCodes();
@@ -206,7 +207,9 @@ export default async function Page(
                   />
                 </dl>
 
-                {law.phases && <PhaseSchedule phases={law.phases} />}
+                {law.phases && (
+                  <PhaseSchedule phases={law.phases} className="mt-5" />
+                )}
               </li>
             ))}
           </ul>
@@ -315,43 +318,3 @@ function Meta({
   );
 }
 
-/**
- * Staged commencement as an obligation → applicable-from timeline.
- * A single status badge cannot express "half of this binds you today".
- * docs/prd.md M3-6.
- */
-function PhaseSchedule({ phases }: { phases: PhaseStep[] }) {
-  return (
-    <ol className="mt-5 border-l border-rule pl-4">
-      {phases.map((p) => (
-        <li key={p.obligation} className="relative py-2">
-          <span
-            aria-hidden="true"
-            className={cn(
-              "absolute -left-[1.3125rem] top-3.5 size-1.5 rounded-full",
-              p.inForce ? "bg-live" : "bg-null",
-            )}
-          />
-          <div className="flex flex-wrap items-baseline justify-between gap-x-4">
-            <span
-              className={cn(
-                "text-body-sm",
-                p.inForce ? "text-ink-300" : "text-ink-500",
-              )}
-            >
-              {p.obligation}
-            </span>
-            <span
-              className={cn(
-                "text-code",
-                p.inForce ? "text-live" : "text-ink-700",
-              )}
-            >
-              {p.applicableFrom ? formatMonth(p.applicableFrom) : "No date set"}
-            </span>
-          </div>
-        </li>
-      ))}
-    </ol>
-  );
-}

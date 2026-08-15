@@ -15,7 +15,7 @@
 
 ## Current Status
 
-**Phase:** 0–4 complete → Phase 5 next (Tracker)
+**Phase:** 0–6 complete → Phase 7 next (Groq / AI Summarizer)
 **Last session:** 2026-08-15
 **Build health:** `tsc --noEmit` ✅ · `eslint` ✅ · `next build` ✅ (static) · 0 console errors · no overflow at 375px · map absent from client bundle ✅ · data-boundary ESLint rule verified firing ✅
 **Blockers:** none
@@ -28,6 +28,8 @@
 
 | Date | Item | Notes |
 |------|------|-------|
+| 2026-08-15 | **Phase 6 — AI Crimes** | `app/ai-crimes/page.tsx` + `[slug]/` (page + not-found, 6 SSG paths); `CoverageMatrixTable` (Server Component, zero client JS), `CrimeList`, `StatuteMapping`, `TechnicalProfile`. 60 cells: 30 direct · 20 analogical · 5 no-coverage · 5 not-researched. |
+| 2026-08-15 | **Phase 5 — Tracker** | `app/tracker/page.tsx`; `StagePipeline`, `DraftEntry`, `CommencementStatus`, `PhaseSchedule` (extracted + shared), `TrackerFilters`; `parseDraftFilters`. 12 instruments across 5 populated stages; 6 passed-but-inert. 7 filter permutations verified; no overflow at 375px. |
 | 2026-08-15 | **Phase 4 — Comparator** | `app/compare/` (page + error); `ComparatorSelector`, `ComparisonGrid`, `ReportingTimeline`, `RevenueControl`; `hooks/use-compare-selection.ts`; `parseCompareCodes` + `parseRevenue`. 7 URL edge cases verified (dedupe, invalid codes, under-selection, bad revenue). Mobile sticky gutter working; page body does not overflow at 375px. |
 | 2026-08-15 | **Phase 3 — Dashboard module & jurisdiction detail** | `app/jurisdictions/[code]/` (page + loading + not-found, `generateStaticParams` × 10, `generateMetadata`); `DirectoryFilters` (client, URL state); `lib/url-state.ts`; `app/loading.tsx`; `Skeleton`; `sitemap.ts` + `robots.ts`. Map mirrors the filtered index. All 8 filter/sort permutations verified server-side. |
 | 2026-08-15 | **Phase 2 — layout shell & navigation** | `TopNav` + `MobileHeader` + `BottomNav` + `Wordmark` + `PageShell` + `PhaseStub`; shared `StatusBadge`, `LastVerified`, `SourceList`, `ScoreBreakdown`, `CoverageCell`, `SeverityBadge`; `EmptyState`/`ErrorState`/`ActionLink`/`Disclaimer`; `error.tsx`, `global-error.tsx`, `not-found.tsx`; 4 route stubs + **`/methodology` built for real**. All 6 routes verified 200 with correct active state and titles. |
@@ -65,15 +67,19 @@ Format:
 
 ## Next Up
 
-1. **Phase 5 — Tracker** (`docs/phases.md` §Phase 5)
-   - `app/tracker/page.tsx` replaces the stub
-   - `getDraftsByStage()` already returns all six stages **including empty buckets**, so the pipeline reads correctly even where a stage has no entries
-   - `stage-pipeline.tsx`, `draft-law-card.tsx`, `commencement-status.tsx`, `phase-schedule.tsx`, `tracker-filters.tsx` (client → URL)
-   - `PhaseSchedule` already exists in `app/jurisdictions/[code]/page.tsx` — extract it to `components/tracker/` and reuse rather than duplicating
-   - ⚠️ `CommencementStatus` is the most nuanced display logic in the app. Comment the *why* (`docs/rules.md` §2.7).
-   - This module's value is entirely data quality — if the tracker data reads thin, fix `data/drafts.ts`, don't paper over it with UI
+**Phase 7 — AI Legal Summarizer + Groq** (`docs/phases.md` §Phase 7). The only external dependency in the product; highest technical risk.
 
-2. Then Phase 6 (AI Crimes) — `getCoverageMatrix()` ready; the sticky-gutter lessons from Phase 4 apply directly to the 6 × 10 matrix.
+⚠️ **Read `docs/rules.md` §4 in full before writing a line of it.**
+
+- Install `groq-sdk`, `zod`, `server-only`
+- `lib/env.ts` (zod-validated, `server-only`, the *only* `process.env` read), `lib/rate-limit.ts`, `lib/ai/{config,client,prompt,schema,summarize,errors}.ts`
+- `app/api/summarize/route.ts` — rate limit → size cap → zod(request) → env check → ground from `lib/data` → Groq → `JSON.parse` → zod(response) → respond
+- `app/assistant/page.tsx` replaces the stub; `assistant-console` (client) + `use-summarize` hook
+- **Build the failure states before the happy path** — all 14 in §4.3 must be individually triggered and verified (bad key, unset key, wrong model id, tiny timeout, forced malformed output, rate limit, oversized body, short/long query, abort)
+- Retry exactly once on 429/5xx/network/first-malformed; **never** on timeout, non-429 4xx, or a second malformed response
+- ⚠️ Confirm the `GROQ_MODEL` default against Groq's live model list (open question #2) — a stale id means every request fails
+- With `GROQ_API_KEY` unset, Modules 1–4 must stay fully functional and `/assistant` must render its designed unavailable state
+- `.env.local` exists in the workspace; do not read it — it holds secrets
 
 **Note:** `components/ui/` still holds ~12 vendored shadcn primitives at default styling (button, dialog, select, sheet, tabs…). Nothing uses them yet — everything built so far is hand-made. Re-skin before first use or they will look like default shadcn (`docs/rules.md` §1.4).
 
@@ -91,6 +97,13 @@ Format:
 | 2026-08-14 | Dark-only; no light theme | Per `docs/prd.md` §6. The design system depends on lit accents against a near-black ground. |
 | 2026-08-14 | Status hues and strictness-ramp hues are kept in separate component vocabularies | Cyan means both "in force" and "moderate strictness"; keeping badges and meters visually disjoint removes the ambiguity (`docs/design.md` §1.4). |
 | 2026-08-14 | AI response is a single validated object, not a token stream, in v1 | Schema validation before render is the hallucination guard; streaming would mean rendering unvalidated partial output. Streaming is a v2 candidate. |
+| 2026-08-15 | **⚠️ A horizontal scroller must be `position: relative`** — added to both `coverage-matrix.tsx` and `comparison-grid.tsx` | `sr-only` is `position: absolute`. Without a positioned scroller its containing block resolves to the *outer* wrapper, so it escapes the horizontal clip entirely — the AI-crimes matrix dragged the page to 798px at 375px. The comparator had the same latent bug (its `<caption class="sr-only">` only escaped notice by sitting at the left edge). **Any future `overflow-x-auto` region needs `relative` and a measured overflow check** — this is invisible without measuring `documentElement.scrollWidth`. |
+| 2026-08-15 | Column headers use `aria-label`, not an `sr-only` span | Same accessibility outcome without adding a positioned element inside a scrolling region. |
+| 2026-08-15 | Zero tallies are never coloured (`Tally`, ai-crimes detail) | "Direct **0**" in green reads as reassurance when zero direct coverage is precisely the finding. |
+| 2026-08-15 | `PhaseSchedule` extracted to `components/tracker/` and shared with the jurisdiction detail page | Two implementations of "what is in force" could disagree, which is the one thing this product cannot get wrong. |
+| 2026-08-15 | `CommencementStatus` states elapsed dormancy in words, not a badge | "Law since 15 Mar 2022 — 4.4 years without binding effect" is the product's entire thesis in one line. A status pill would flatten it, and most tooling renders exactly this state as "in force". |
+| 2026-08-15 | The pipeline counts ignore `?stage=`, only the register narrows | Selecting a stage should not blank out the other five counts — the sequence is the information. |
+| 2026-08-15 | Pipeline gap-marker moved off the numeral onto the label | Beside a figure the amber square read as a decimal point ("3 ▪" → "3."). |
 | 2026-08-15 | **Sticky table gutter needs three things, all non-obvious** (`comparison-grid.tsx`) | (1) `border-separate`, not `border-collapse` — collapsed borders make a sticky `<th>` paint unreliably; borders moved onto cells. (2) `min-w-44`, not `w-44` — under auto table layout a plain width is a suggestion and the browser collapsed the gutter to 112px, wrapping every label to six lines. (3) **no horizontal padding on the scroll container** — `sticky left-0` anchors to the *padding* edge, so `px-5` left a 20px strip where scrolled content stayed visible beside the pinned column. The inset lives on the cells instead. |
 | 2026-08-15 | "Strictest" marker suppressed when every value ties | Marking all three cells "Strictest" (Data theft, 3 years each) says nothing, and picking one arbitrarily would be worse. Now requires >1 distinct known value. |
 | 2026-08-15 | Hypothetical revenue is URL state (`?rev=`); divergence toggle is local state | The revenue assumption changes every figure in the financial section, so a shared link must carry it — and the server recomputes, keeping normalisation logic solely in `lib/scoring/normalize.ts`. The divergence toggle is a view preference nobody would share. |

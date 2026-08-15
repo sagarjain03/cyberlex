@@ -57,7 +57,10 @@ export function ComparisonGrid({ matrix }: { matrix: ComparisonMatrix }) {
             the padding edge, so a `px-5` gutter left a 20px strip in which
             scrolled content stayed visible beside the pinned column. The
             page inset lives on the cells instead. */}
-        <div className="-mx-5 overflow-x-auto lg:mx-0">
+        {/* `relative` so the scroller is the containing block for any
+            absolutely-positioned descendant (`sr-only`, the caption) —
+            otherwise they escape the horizontal clip and widen the page. */}
+        <div className="relative -mx-5 overflow-x-auto lg:mx-0">
           {/* `border-separate` rather than `border-collapse`: with collapsed
               borders a sticky <th> does not paint reliably above the cells
               scrolling under it, and content bleeds through the pinned label

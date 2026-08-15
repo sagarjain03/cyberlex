@@ -3,8 +3,38 @@ import {
   MAX_COMPARE_ITEMS,
   STRICTNESS_BANDS,
 } from "@/lib/constants/thresholds";
-import type { JurisdictionFilters, JurisdictionSort } from "@/lib/data";
-import type { AiPosture, LegalStatus, Region } from "@/types";
+import type {
+  DraftFilters,
+  JurisdictionFilters,
+  JurisdictionSort,
+} from "@/lib/data";
+import { LEGISLATIVE_STAGES } from "@/types";
+import type {
+  AiPosture,
+  DeveloperImpact,
+  JurisdictionCode,
+  LegalStatus,
+  Region,
+} from "@/types";
+
+/**
+ * Duplicated from the data layer deliberately: this module must stay free of
+ * `@/data` imports, and validating against a literal list keeps URL parsing a
+ * pure function. Kept in sync by the `JurisdictionCode` type — adding a
+ * jurisdiction without updating this is a compile error.
+ */
+const JURISDICTION_CODES: JurisdictionCode[] = [
+  "US",
+  "EU",
+  "UK",
+  "IN",
+  "SG",
+  "CN",
+  "JP",
+  "AU",
+  "BR",
+  "AE",
+];
 
 /**
  * Typed reading of `searchParams`.
@@ -91,6 +121,27 @@ export function parseSort(params: RawSearchParams): JurisdictionSort {
 
 export function countActiveFilters(params: RawSearchParams): number {
   return FILTER_KEYS.filter((k) => one(params[k])).length;
+}
+
+/* ── Tracker ────────────────────────────────────────────────────────────── */
+
+const IMPACTS: DeveloperImpact[] = ["none", "low", "material"];
+
+export function parseDraftFilters(params: RawSearchParams): DraftFilters {
+  const filters: DraftFilters = {};
+
+  const stage = pick(params.stage, [...LEGISLATIVE_STAGES]);
+  if (stage) filters.stage = stage;
+
+  const impact = pick(params.impact, IMPACTS);
+  if (impact) filters.impact = impact;
+
+  const code = one(params.jurisdiction)?.toUpperCase();
+  if (code && JURISDICTION_CODES.includes(code as JurisdictionCode)) {
+    filters.jurisdictionCode = code as JurisdictionCode;
+  }
+
+  return filters;
 }
 
 /* ── Comparator ─────────────────────────────────────────────────────────── */
