@@ -15,7 +15,9 @@
 
 ## Current Status
 
-**Phase:** 0–6 complete → Phase 7 next (Groq / AI Summarizer)
+**Phase:** 0–7 complete → Phase 8 next (polish, a11y, performance, deploy)
+
+**⚠️ Blocked on environment, not code:** Groq returns `403 "Access denied. Please check your network settings."` from this machine — for `chat.completions` *and* `models.list`. That is a **network-origin block** (VPN / datacenter exit IP), not a bad key or model access. The integration is verified as far as the network allows; **one live end-to-end success still needs to be observed with the VPN off.**
 **Last session:** 2026-08-15
 **Build health:** `tsc --noEmit` ✅ · `eslint` ✅ · `next build` ✅ (static) · 0 console errors · no overflow at 375px · map absent from client bundle ✅ · data-boundary ESLint rule verified firing ✅
 **Blockers:** none
@@ -28,6 +30,7 @@
 
 | Date | Item | Notes |
 |------|------|-------|
+| 2026-08-16 | **Phase 7 — AI Summarizer + Groq** | `lib/env.ts`, `lib/rate-limit.ts`, `lib/ai/{config,client,errors,schema,prompt,summarize}.ts`, `app/api/summarize/route.ts`, `app/api/health/route.ts`, `hooks/use-summarize.ts`, `AssistantConsole` + `SummaryResult`. Installed `groq-sdk`, `zod`, `server-only`. **Security gate passed** (see below). |
 | 2026-08-15 | **Phase 6 — AI Crimes** | `app/ai-crimes/page.tsx` + `[slug]/` (page + not-found, 6 SSG paths); `CoverageMatrixTable` (Server Component, zero client JS), `CrimeList`, `StatuteMapping`, `TechnicalProfile`. 60 cells: 30 direct · 20 analogical · 5 no-coverage · 5 not-researched. |
 | 2026-08-15 | **Phase 5 — Tracker** | `app/tracker/page.tsx`; `StagePipeline`, `DraftEntry`, `CommencementStatus`, `PhaseSchedule` (extracted + shared), `TrackerFilters`; `parseDraftFilters`. 12 instruments across 5 populated stages; 6 passed-but-inert. 7 filter permutations verified; no overflow at 375px. |
 | 2026-08-15 | **Phase 4 — Comparator** | `app/compare/` (page + error); `ComparatorSelector`, `ComparisonGrid`, `ReportingTimeline`, `RevenueControl`; `hooks/use-compare-selection.ts`; `parseCompareCodes` + `parseRevenue`. 7 URL edge cases verified (dedupe, invalid codes, under-selection, bad revenue). Mobile sticky gutter working; page body does not overflow at 375px. |
@@ -67,7 +70,42 @@ Format:
 
 ## Next Up
 
-**Phase 7 — AI Legal Summarizer + Groq** (`docs/phases.md` §Phase 7). The only external dependency in the product; highest technical risk.
+**Phase 8 — Polish, accessibility, performance, deploy** (`docs/phases.md` §Phase 8).
+
+**Carry-over from Phase 7, do first:**
+- One live end-to-end assistant success with the VPN off — the only unverified link in the chain
+- Failure modes 2, 4, 13 (upstream 429 / 5xx / transport) against a stub server
+
+**Phase 8 proper:**
+- Full a11y audit (`docs/rules.md` §5): keyboard traversal, screen-reader pass on `/`, `/compare`, `/assistant`, contrast on real composited backgrounds, reduced-motion
+- Responsiveness sweep at 320/375/768/1024/1440 — **measure `documentElement.scrollWidth` on every route**, do not eyeball it
+- `app/icon.tsx`, `app/opengraph-image.tsx`
+- Lighthouse mobile: Perf ≥ 90, A11y ≥ 95, Best Practices ≥ 95
+- Re-run the client-bundle key grep as the launch gate (passed once already, 2026-08-16)
+- Rewrite `README.md`; deploy with production env vars
+- ⚠️ **The 65-record verification gate is still open and still blocks launch** — see Current Status
+
+<details><summary>Phase 7 verification log (what was actually exercised)</summary>
+
+| # | Failure mode | Result |
+|---|---|---|
+| 1 | Rate limited (ours) | ✅ 429 + `Retry-After` counting down correctly at the cap |
+| 3 | Timeout | ✅ 504 `TIMEOUT` via `AI_REQUEST_TIMEOUT_MS=1` |
+| 5/6 | Upstream 4xx / auth | ✅ 403 classified → `AI_UNAVAILABLE`, detail server-side only |
+| 7 | Malformed JSON | ✅ fixture → "it was not valid JSON" |
+| 8 | Schema mismatch | ✅ fixture → shape error; also caught 3× duplicate `Overview`, which `.length(3)` alone would pass |
+| 9 | Empty response | ✅ fixture → "every section was empty" → `EMPTY_RESPONSE` |
+| 12 | Provider not configured | ✅ `aiConfigured:false`, 503 before any network call, designed UI state, modules 1–4 all 200 |
+| — | Invalid query (short/long/non-JSON) | ✅ 400 `INVALID_QUERY` |
+| — | Payload too large | ✅ 413 |
+| — | Wrong method | ✅ 405 + `Allow: POST` |
+| — | Fenced JSON (` ```json `) | ✅ stripped, payload still schema-validated |
+| 2, 4, 13 | Upstream 429 / 5xx / transport | ⏳ implemented, not yet triggered live |
+| 10, 11 | Out-of-scope / low confidence | ⏳ needs a live call |
+| 14 | Client abort | ⏳ needs a browser session |
+
+**Security gate (2026-08-16):** `GROQ_API_KEY` literal — 0 hits in client chunks. `gsk_` pattern — 0. Live key value — 0 in `.next/static`. `groq-sdk` — 0 in client chunks.
+</details>
 
 ⚠️ **Read `docs/rules.md` §4 in full before writing a line of it.**
 
@@ -97,7 +135,12 @@ Format:
 | 2026-08-14 | Dark-only; no light theme | Per `docs/prd.md` §6. The design system depends on lit accents against a near-black ground. |
 | 2026-08-14 | Status hues and strictness-ramp hues are kept in separate component vocabularies | Cyan means both "in force" and "moderate strictness"; keeping badges and meters visually disjoint removes the ambiguity (`docs/design.md` §1.4). |
 | 2026-08-14 | AI response is a single validated object, not a token stream, in v1 | Schema validation before render is the hallucination guard; streaming would mean rendering unvalidated partial output. Streaming is a v2 candidate. |
-| 2026-08-15 | **⚠️ A horizontal scroller must be `position: relative`** — added to both `coverage-matrix.tsx` and `comparison-grid.tsx` | `sr-only` is `position: absolute`. Without a positioned scroller its containing block resolves to the *outer* wrapper, so it escapes the horizontal clip entirely — the AI-crimes matrix dragged the page to 798px at 375px. The comparator had the same latent bug (its `<caption class="sr-only">` only escaped notice by sitting at the left edge). **Any future `overflow-x-auto` region needs `relative` and a measured overflow check** — this is invisible without measuring `documentElement.scrollWidth`. |
+| 2026-08-16 | **`GROQ_MODEL` default is `openai/gpt-oss-120b`** (open question #2, resolved) | `llama-3.3-70b-versatile` — the default this project had documented since Phase 0 — was deprecated on 17 June 2026 for free/developer tiers. Shipping it would have made every request fail. Verified against Groq's live catalogue rather than assumed. |
+| 2026-08-16 | `response_format: json_object`, **never** `json_schema` | `json_schema` enforcement is reported to be silently ignored on gpt-oss models, returning free-form prose. The zod-validate + one-repair design already assumed the provider might not keep its promise; this confirmed it. |
+| 2026-08-16 | The model's `groundedOn.jurisdictions` is filtered against real codes, not cast | Caught by the compiler. The model can name any string; casting would have rendered an in-app link built from a hallucination. |
+| 2026-08-16 | Groq 401/403 → `AI_UNAVAILABLE`, with the upstream message kept **server-side only** | 403 is not always credentials — Groq returns it for blocked network origins with a valid key. Operators need to tell those apart; users must be told neither. |
+| 2026-08-16 | **Stale Turbopack FS cache made every route handler 404** despite compiling | Cost real debugging time. `rm -rf .next` fixed it. Filesystem caching is on by default in Next 16 — suspect it first when routes exist, compile, and still 404. The same cache also leaves stale `.next/dev/types/validator.ts` that fails `tsc` with `TS1434`. |
+| 2026-08-16 | **⚠️ A horizontal scroller must be `position: relative`** — added to both `coverage-matrix.tsx` and `comparison-grid.tsx` | `sr-only` is `position: absolute`. Without a positioned scroller its containing block resolves to the *outer* wrapper, so it escapes the horizontal clip entirely — the AI-crimes matrix dragged the page to 798px at 375px. The comparator had the same latent bug (its `<caption class="sr-only">` only escaped notice by sitting at the left edge). **Any future `overflow-x-auto` region needs `relative` and a measured overflow check** — this is invisible without measuring `documentElement.scrollWidth`. |
 | 2026-08-15 | Column headers use `aria-label`, not an `sr-only` span | Same accessibility outcome without adding a positioned element inside a scrolling region. |
 | 2026-08-15 | Zero tallies are never coloured (`Tally`, ai-crimes detail) | "Direct **0**" in green reads as reassurance when zero direct coverage is precisely the finding. |
 | 2026-08-15 | `PhaseSchedule` extracted to `components/tracker/` and shared with the jurisdiction detail page | Two implementations of "what is in force" could disagree, which is the one thing this product cannot get wrong. |
@@ -141,6 +184,9 @@ Format:
 
 | Item | Impact | Status |
 |------|--------|--------|
+| **Groq blocked at network level from this machine** (`403 Access denied — check your network settings`, on both completions and `models.list`) | The assistant cannot complete a live call while a VPN/blocked exit IP is in use. Every other module is unaffected by design. | **Open** — retry with VPN off; the code path is verified up to the network boundary |
+| **Failure modes 2, 4, 13 not yet triggered live** (upstream 429, upstream 5xx, transport failure) | Their classification and retry logic is implemented and reviewed but has not been exercised against a real upstream | Open — verify opportunistically, or with a stub server |
+| Turbopack's on-disk cache (`.next/cache/turbopack/*.sst`) contains the API key in plaintext | Not client-served and `.next/` is gitignored, so not a leak today. It would travel with a copied `.next/` or a shared CI build cache. | Accepted; do not share build caches |
 | Rate limiting is in-memory and therefore per-instance | On a multi-instance deploy the effective limit is `RATE_LIMIT_MAX × instances`. It is an abuse brake, not a security control. | Accepted for v1 (`docs/rules.md` §4.2) |
 | `GROQ_MODEL` default is unverified against Groq's live catalogue | Wrong model ID = every AI request fails | Must be confirmed in Phase 7 (PRD open question #2) |
 
@@ -151,7 +197,7 @@ Format:
 | # | Question | Needed by | Status |
 |---|----------|-----------|--------|
 | 1 | Is `/methodology` a nav item or contextual-only? | Phase 2 | Open — currently planned as contextual + footer |
-| 2 | Confirm the production Groq model ID against Groq's live model list | Phase 7 | Open |
+| 2 | ~~Confirm the production Groq model ID~~ | Phase 7 | ✅ Resolved — `openai/gpt-oss-120b`; the previous default was deprecated 17 Jun 2026 |
 | 3 | ~~Staleness threshold for `lastVerified`~~ | Phase 1 | ✅ Resolved — 120 days (`lib/constants/thresholds.ts`) |
 | 4 | ~~Ship 10 jurisdictions, or trim to 8?~~ | Phase 1 | ✅ Resolved — kept 10 |
 | 5 | **Who performs primary-source verification of the 65 records, and when?** This is a launch gate and needs a human with legal training, not more engineering. | Before launch | **Open — highest-priority open item** |

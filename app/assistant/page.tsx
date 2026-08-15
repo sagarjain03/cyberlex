@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { Sparkles } from "lucide-react";
 
-import { PhaseStub } from "@/components/layout/phase-stub";
+import { PageShell, Section } from "@/components/layout/page-shell";
+import { AssistantConsole } from "@/components/assistant/assistant-console";
+import { isAiConfigured } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "Assistant",
@@ -10,21 +11,24 @@ export const metadata: Metadata = {
 };
 
 export default function Page() {
+  // Read on the server: whether the provider is configured is a boolean the
+  // client may know, but the key itself never crosses the boundary.
+  const aiConfigured = isAiConfigured();
+
   return (
-    <PhaseStub
+    <PageShell
       eyebrow="Module 05"
-      title="Legal assistant"
-      lede="Ask in plain English, get a structured answer — overview, sanctions, compliance takeaways — grounded in the records this product actually tracks."
-      phase="Phase 7 · requires the Groq integration"
-      icon={Sparkles}
-      willInclude={[
-        "Single-turn question → three fixed sections: Overview, Sanctions, Compliance Takeaways",
-        "Grounded in tracked jurisdiction and law records, with the records it used linked back into the app",
-        "Response validated against a schema before render — a partially-valid answer is a failure, not a degraded success",
-        "Self-reported confidence and an explicit out-of-scope state, rather than a confident-looking guess",
-        "Every failure mode designed: rate limit, timeout, malformed output, provider unavailable",
-        "AI output visually distinct from curated data, with a non-dismissible disclaimer attached",
-      ]}
-    />
+      title={
+        <>
+          Ask it
+          <span className="font-serif italic text-ink-500"> plainly. </span>
+        </>
+      }
+      lede="One question, one structured answer — overview, sanctions, compliance takeaways — grounded in the records this product tracks. It will tell you when it doesn't know."
+    >
+      <Section label="Console">
+        <AssistantConsole aiConfigured={aiConfigured} />
+      </Section>
+    </PageShell>
   );
 }

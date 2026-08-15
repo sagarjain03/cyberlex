@@ -269,8 +269,8 @@ Rate limiting is in-memory and therefore **per-instance**. This is an accepted v
 
 | Parameter | Value | Reason |
 |-----------|-------|--------|
-| `model` | `GROQ_MODEL` env, documented default | Groq's catalogue changes; the ID must be swappable without a code change. **Verify the default against Groq's live model list before Phase 7 ships.** |
-| `response_format` | `{ type: 'json_object' }` | Structured output is a requirement, not a hope. |
+| `model` | `GROQ_MODEL` env, default `openai/gpt-oss-120b` | ✅ Verified 2026-08-15. `llama-3.3-70b-versatile` — this document's original default — was **deprecated on 17 June 2026** for free/developer tiers, along with `llama-3.1-8b-instant`, `qwen/qwen3-32b` and `meta-llama/llama-4-scout-17b-16e-instruct`. Keep it env-configurable so the next deprecation is a config change. Fallback: `qwen/qwen3.6-27b`. |
+| `response_format` | `{ type: 'json_object' }` — **not** `json_schema` | Structured output is a requirement, not a hope — and `json_schema` enforcement is reported to be silently ignored on gpt-oss models, returning free-form prose. We ask for JSON, then validate it ourselves and repair once, so a provider regression degrades to a designed error rather than rendering garbage as legal information. |
 | `temperature` | 0.2 | Legal summarization wants determinism, not creativity. |
 | `max_tokens` | Bounded (≈1500) | Caps cost and latency; our schema does not need more. |
 | `signal` | `AbortSignal.timeout(AI_REQUEST_TIMEOUT_MS)` | Default 20s hard ceiling. |
