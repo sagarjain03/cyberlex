@@ -211,9 +211,22 @@ Sparse and informational. **Anything purely decorative was cut in v2.**
 | `animate-ping-slow` | 3s expanding ring — map markers only |
 | `row-mark` | 260ms height grow on hover |
 
-Everything else is a 150–260ms colour or opacity transition. **Lenis smooth scroll is bypassed entirely** under `prefers-reduced-motion`, and the global reduced-motion block clamps all animation.
+Everything else is a 150–260ms colour or opacity transition, and the global reduced-motion block clamps all animation.
+
+**Scrolling is native.** Smooth-scroll hijacking was removed in favour of the browser's own behaviour — see `docs/rules.md` §1.4 rule 7.
 
 **Removed in v2:** scanline sweep, grid mesh, corner brackets, card lift, shimmer, staggered card entrances, corner blooms.
+
+### 6.1 `/docs` — the one choreographed surface
+
+The manual is the single page where motion carries the reading rather than the data, and it is scoped there deliberately: a working surface answers a question, a manual has to hold attention across ~15,000px of scroll. It uses GSAP ScrollTrigger (`components/docs/gsap-core.ts`) under four standing constraints:
+
+1. **Every timeline sits inside a `(prefers-reduced-motion: no-preference)` `matchMedia`.** The reduced-motion path is *no timeline at all*, not a shorter one.
+2. **Nothing is gated behind a trigger.** The markup is complete and legible server-side; with JS off none of it runs and nothing is missing.
+3. **Native scroll is untouched.** No pinning, no scroller proxy — the sticky module pane is CSS `position: sticky`, and GSAP only *reads* scroll position.
+4. **Scrubbed motion carries information.** Rules that draw, bars that fill and the reading rail are readouts of position or magnitude; the fade-and-settle reveal is the only purely presentational move, and it never reverses.
+
+Two mechanical traps, both hit and fixed during the build, are documented at their call sites: `once: true` self-kills a trigger mid-`update()` and corrupts ScrollTrigger's internal array (use the default `toggleActions`), and manual `mm.revert()` / `trigger.kill()` inside `useGSAP` double-reverts what the hook's context already owns.
 
 ---
 

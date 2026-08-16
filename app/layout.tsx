@@ -4,7 +4,6 @@ import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import { BottomNav } from "@/components/layout/bottom-nav";
 import { MobileHeader } from "@/components/layout/mobile-header";
 import { TopNav } from "@/components/layout/top-nav";
-import { SmoothScroll } from "@/components/providers/smooth-scroll";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { SITE } from "@/lib/constants/site";
 import { getDirectoryStats } from "@/lib/data";
@@ -65,44 +64,45 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
   const { needsReview } = await getDirectoryStats();
 
   return (
+    // No `h-full` on <html>: pinning the root to viewport height while the
+    // document is several thousand pixels tall is what broke wheel scrolling.
+    // The page grows with its content instead.
     <html
       lang="en"
-      className={`${instrumentSerif.variable} ${geist.variable} ${geistMono.variable} h-full`}
+      className={`${instrumentSerif.variable} ${geist.variable} ${geistMono.variable}`}
       suppressHydrationWarning
     >
-      <body className="min-h-full bg-void">
-        <SmoothScroll>
-          <TooltipProvider delayDuration={150}>
-            <a
-              href="#main"
-              className="sr-only bg-bone px-4 py-2 text-micro text-void focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-100"
-            >
-              Skip to content
-            </a>
+      <body className="bg-void">
+        <TooltipProvider delayDuration={150}>
+          <a
+            href="#main"
+            className="sr-only bg-bone px-4 py-2 text-micro text-void focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-100"
+          >
+            Skip to content
+          </a>
 
-            {/* The only ambient texture. No grids, no scanlines. */}
-            <div
-              aria-hidden="true"
-              className="grain pointer-events-none fixed inset-0 z-50"
-            />
+          {/* The only ambient texture. No grids, no scanlines. */}
+          <div
+            aria-hidden="true"
+            className="grain pointer-events-none fixed inset-0 z-50"
+          />
 
-            <div className="flex min-h-dvh flex-col">
-              <TopNav unverifiedCount={needsReview} />
-              <MobileHeader unverifiedCount={needsReview} />
+          <div className="flex min-h-dvh flex-col">
+            <TopNav unverifiedCount={needsReview} />
+            <MobileHeader unverifiedCount={needsReview} />
 
-              {/* Bottom padding clears the mobile nav; `env()` handles the
+            {/* Bottom padding clears the mobile nav; `env()` handles the
                   iOS home indicator on top of that. */}
-              <main
-                id="main"
-                className="flex-1 pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0"
-              >
-                {children}
-              </main>
+            <main
+              id="main"
+              className="flex-1 pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0"
+            >
+              {children}
+            </main>
 
-              <BottomNav />
-            </div>
-          </TooltipProvider>
-        </SmoothScroll>
+            <BottomNav />
+          </div>
+        </TooltipProvider>
       </body>
     </html>
   );

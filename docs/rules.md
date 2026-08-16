@@ -29,7 +29,6 @@ These, and only these, may appear in `package.json` dependencies for v1:
 | `tw-animate-css` | Installed (Phase 0) | Tailwind v4 animation utilities (shadcn dependency) |
 | `motion` | Installed (Phase 0) | Component-level micro-interactions: meter fills, stagger, layout transitions |
 | `gsap` + `@gsap/react` | Installed (Phase 0) | Timeline-based scroll choreography and signature sequences that CSS cannot express |
-| `lenis` | Installed (Phase 0) | Smooth scrolling; disabled under `prefers-reduced-motion` |
 | `zod` | To add (Phase 7) | Runtime validation: env, request bodies, LLM output |
 | `groq-sdk` | To add (Phase 7) | Groq API client — **server-side imports only** |
 | `server-only` | To add (Phase 7) | Build-time guard on server modules |
@@ -41,11 +40,12 @@ The v1.0 draft of this document banned component and animation libraries. **That
 1. **shadcn primitives are vendored and re-skinned, never used as-is.** `app/globals.css` binds shadcn's semantic variables (`--primary`, `--card`, `--border`, …) to CyberLex tokens, so every primitive inherits the design system. A component that still looks like default shadcn has not been finished. `components/ui/**` is ESLint-ignored as vendored code.
 2. **One tween engine per job.** `motion` for component state and gesture animation; `gsap` for scroll-driven timelines. `anime.js` was declined — a second general-purpose tween engine is redundant weight.
 3. **Animation never gates content.** Anything scroll-triggered must be visible and readable with JS disabled or before the trigger fires. No content that only exists after an animation.
-4. **`prefers-reduced-motion` still wins.** Lenis is bypassed entirely, GSAP timelines are killed, and `motion` components fall back to their `initial={false}` state. Non-negotiable (§5.4).
+4. **`prefers-reduced-motion` still wins.** GSAP timelines are killed and `motion` components fall back to their `initial={false}` state. Non-negotiable (§5.4).
 5. **Animation stays out of the critical path.** No animation library is imported into a Server Component or a route's initial render path where a CSS transition would do.
 6. **Aceternity-style effects are hand-built** from the motifs in `docs/design.md` rather than pasted in — they are copy-paste snippets, not a dependency, and ours must use our tokens.
+7. **Never override native scrolling.** `lenis` was installed in Phase 0 and **removed on 2026-08-16** after it broke mouse-wheel scrolling. Scroll is an OS-level behaviour the user owns and expects to work identically everywhere; a decorative library that can take it away is not a trade worth making. This rule generalises: do not hijack browser-native input behaviour for aesthetics.
 
-**Total added: 12.** Nothing else without amending this table.
+**Total added: 11.** Nothing else without amending this table.
 
 ### 1.2 The rule
 

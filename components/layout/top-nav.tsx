@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { Wordmark } from "@/components/layout/wordmark";
 import { useScrolled } from "@/hooks/use-scroll-state";
-import { PRIMARY_NAV, isActiveRoute } from "@/lib/constants/nav";
+import { DOCS_NAV, PRIMARY_NAV, isActiveRoute } from "@/lib/constants/nav";
 import { cn } from "@/lib/utils";
 
 interface TopNavProps {
@@ -33,33 +33,58 @@ export function TopNav({ unverifiedCount }: TopNavProps) {
       <Wordmark />
 
       <nav aria-label="Primary" className="flex items-center gap-7">
-        {PRIMARY_NAV.map((item) => {
-          const active = isActiveRoute(pathname, item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              className={cn(
-                "relative py-1 text-body-sm transition-colors",
-                active ? "text-bone" : "text-ink-500 hover:text-ink-100",
-              )}
-            >
-              {item.label}
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "absolute inset-x-0 -bottom-px h-px origin-left bg-bone transition-transform duration-260",
-                  active ? "scale-x-100" : "scale-x-0",
-                )}
-              />
-            </Link>
-          );
-        })}
+        {PRIMARY_NAV.map((item) => (
+          <NavLink
+            key={item.href}
+            href={item.href}
+            label={item.label}
+            active={isActiveRoute(pathname, item.href)}
+          />
+        ))}
+
+        {/* The manual sits after a hairline: reachable from every page, but
+            visibly not one of the five working surfaces. */}
+        <span aria-hidden="true" className="h-3 w-px bg-rule-strong" />
+        <NavLink
+          href={DOCS_NAV.href}
+          label={DOCS_NAV.label}
+          active={isActiveRoute(pathname, DOCS_NAV.href)}
+        />
       </nav>
 
       <VerificationStatus count={unverifiedCount} />
     </header>
+  );
+}
+
+/** Bone when active, with a hairline that grows from the left. No pills. */
+function NavLink({
+  href,
+  label,
+  active,
+}: {
+  href: string;
+  label: string;
+  active: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "relative py-1 text-body-sm transition-colors",
+        active ? "text-bone" : "text-ink-500 hover:text-ink-100",
+      )}
+    >
+      {label}
+      <span
+        aria-hidden="true"
+        className={cn(
+          "absolute inset-x-0 -bottom-px h-px origin-left bg-bone transition-transform duration-260",
+          active ? "scale-x-100" : "scale-x-0",
+        )}
+      />
+    </Link>
   );
 }
 

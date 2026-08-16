@@ -43,4 +43,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-docs/
+# Project papers only. Anchored: an unanchored `docs/` also matches `app/docs/`
+# and `components/docs/`, which hides real source from git *and* from Tailwind's
+# source detection (it skips gitignored paths, so their classes never compile).
+/docs/

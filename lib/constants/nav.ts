@@ -1,4 +1,5 @@
 import {
+  BookOpen,
   BrainCircuit,
   FileClock,
   LayoutGrid,
@@ -41,8 +42,21 @@ export const PRIMARY_NAV: readonly NavItem[] = [
   },
 ] as const;
 
+/**
+ * The manual. Deliberately outside `PRIMARY_NAV` — that list is capped at five
+ * because the mobile bottom nav is — so the masthead and mobile header render
+ * it explicitly as a trailing link instead of adding a sixth tab.
+ */
+export const DOCS_NAV: NavItem = {
+  label: "Docs",
+  shortLabel: "Docs",
+  href: "/docs",
+  icon: BookOpen,
+};
+
 /** Reached contextually and from the footer — never in the primary nav. */
 export const SECONDARY_NAV: readonly NavItem[] = [
+  DOCS_NAV,
   {
     label: "Methodology",
     shortLabel: "Method",

@@ -43,7 +43,13 @@ export function ScoreRule({
       aria-valuemax={100}
       aria-label={`Strictness ${clamped} of 100 — ${band.label}`}
     >
-      <div className="relative h-px flex-1 bg-rule" aria-hidden="true">
+      {/* `data-score-track` is a hook for scroll choreography that reveals the
+          rule by clipping it — fill and tick together. Nothing styles it. */}
+      <div
+        data-score-track
+        className="relative h-px flex-1 bg-rule"
+        aria-hidden="true"
+      >
         <div
           className={cn("absolute inset-y-0 left-0", BAND_FILL[band.token])}
           style={{ width: `${clamped}%` }}

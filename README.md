@@ -115,7 +115,7 @@ Automated sweep, 11 routes × {320, 375, 768, 1024, 1440}px:
 - **Horizontal overflow:** 0 failures (wide tables scroll inside their own container)
 - **Heading structure, landmarks, labels, alt text, focus order:** 0 issues
 - **Contrast:** 0 failures against real composited backgrounds
-- **Reduced motion:** 0 violations; Lenis smooth scroll fully bypassed
+- **Reduced motion:** 0 violations; scrolling is native (no smooth-scroll hijacking)
 - **Client bundle:** 0 references to `GROQ_API_KEY`, the key value, `gsk_`, or `groq-sdk`
 - **Assistant failure modes:** 11 of 14 individually triggered ([`docs/memory.md`](docs/memory.md))
 
