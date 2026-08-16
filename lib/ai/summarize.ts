@@ -18,7 +18,7 @@ import {
   type RawLegalSummary,
 } from "./schema";
 import { SYSTEM_PROMPT, buildContext, buildRepairInstruction } from "./prompt";
-import { getJurisdictionCodes } from "@/lib/data";
+import { getJurisdictionCodes, getLaws } from "@/lib/data";
 import type { JurisdictionCode, LegalSummary } from "@/types";
 
 interface Message {
@@ -175,17 +175,38 @@ export async function summarize(
     }
   }
 
-  // The model can name any string as a grounding source, including a
-  // jurisdiction we do not track. Casting it would render a dead link built
-  // from a hallucination, so it is filtered against the real code set.
-  const validCodes = new Set(await getJurisdictionCodes());
-  const jurisdictions = result.data.groundedOn.jurisdictions
-    .map((c) => c.toUpperCase())
-    .filter((c): c is JurisdictionCode => validCodes.has(c as JurisdictionCode));
+  // ── Grounding attribution, resolved rather than trusted ────────────────
+  // Two problems with taking `groundedOn` at face value:
+  //   1. The model can name any string, including a jurisdiction we do not
+  //      track — casting it would render an in-app link built from a
+  //      hallucination.
+  //   2. It frequently cites lawIds correctly but leaves `jurisdictions`
+  //      empty, which silently drops the "Grounded on" links from a
+  //      well-grounded answer.
+  // Both are fixed the same way: keep only ids that resolve against real
+  // records, then derive the jurisdictions from the cited laws.
+  const [validCodes, allLaws] = await Promise.all([
+    getJurisdictionCodes(),
+    getLaws(),
+  ]);
+
+  const codeSet = new Set(validCodes);
+  const lawById = new Map(allLaws.map((l) => [l.id, l]));
+
+  const lawIds = result.data.groundedOn.lawIds.filter((id) => lawById.has(id));
+
+  const jurisdictions = Array.from(
+    new Set([
+      ...result.data.groundedOn.jurisdictions
+        .map((c) => c.toUpperCase())
+        .filter((c): c is JurisdictionCode => codeSet.has(c as JurisdictionCode)),
+      ...lawIds.map((id) => lawById.get(id)!.jurisdictionCode),
+    ]),
+  );
 
   return {
     query,
     ...result.data,
-    groundedOn: { ...result.data.groundedOn, jurisdictions },
+    groundedOn: { jurisdictions, lawIds },
   };
 }

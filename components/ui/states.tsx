@@ -39,7 +39,10 @@ function StateFrame({
         strokeWidth={1.25}
         aria-hidden="true"
       />
-      <h3 className="mt-5 text-h3 text-ink-100">{headline}</h3>
+      {/* h2, not h3: these render either directly under a page h1 (the 404s)
+          or under a Section's h2 — h3 in the first case is a heading-level
+          skip, which the a11y sweep caught on /does-not-exist. */}
+      <h2 className="mt-5 text-h3 text-ink-100">{headline}</h2>
       <p className="mt-2 max-w-[42ch] text-body-sm text-ink-500">{body}</p>
       {action && <div className="mt-6">{action}</div>}
     </div>

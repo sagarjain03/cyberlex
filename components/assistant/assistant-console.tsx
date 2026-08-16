@@ -96,6 +96,10 @@ export function AssistantConsole({ aiConfigured }: { aiConfigured: boolean }) {
             rows={2}
             placeholder="Ask about a statute, a deadline, or a penalty…"
             aria-describedby="assistant-hint"
+            // `outline-none` is permitted here only because the container
+            // supplies a stronger replacement: its hairline goes bone on
+            // `focus-within` (18:1). Do not remove that class without adding a
+            // ring back here. docs/rules.md §5.2.
             className="min-h-14 flex-1 resize-none bg-transparent text-body-lg text-ink-100 outline-none placeholder:text-ink-700"
           />
 

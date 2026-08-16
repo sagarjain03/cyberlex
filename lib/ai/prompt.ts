@@ -2,6 +2,7 @@ import "server-only";
 
 import {
   getJurisdictions,
+  getLaws,
   getLawsByJurisdiction,
   getMetricsByCode,
 } from "@/lib/data";
@@ -53,21 +54,41 @@ export async function buildContext(
     .map((c) => c.toUpperCase())
     .filter((c) => all.some((j) => j.code === c));
 
-  // No explicit selection: match tracked entities named in the query. Cheap
-  // keyword matching is enough here — precision costs nothing because the
-  // model is told the context is authoritative but not exhaustive.
+  const q = query.toLowerCase();
+
+  // Match on jurisdiction identity…
+  const byJurisdiction = all
+    .filter(
+      (j) =>
+        q.includes(j.name.toLowerCase()) ||
+        q.includes(j.shortName.toLowerCase()) ||
+        new RegExp(`\\b${j.code.toLowerCase()}\\b`).test(q),
+    )
+    .map((j) => j.code);
+
+  // …and on instrument identity. Questions routinely name the law without
+  // naming the country — "Is the DPDP Act enforceable yet?" contains no
+  // jurisdiction at all. Matching names only meant those queries fell through
+  // to the alphabetical fallback, which excluded the very jurisdiction being
+  // asked about, and the model correctly reported it had no context.
+  const laws = await getLaws();
+  const byLaw = laws
+    .filter((l) => {
+      const short = l.shortTitle.toLowerCase();
+      return (
+        q.includes(short) ||
+        q.includes(l.citation.toLowerCase()) ||
+        // Acronyms ("DPDP", "NIS2", "LGPD", "CFAA") carry the whole query.
+        short
+          .split(/\s+/)
+          .some((w) => w.length >= 4 && /^[a-z0-9]+$/.test(w) && q.includes(w))
+      );
+    })
+    .map((l) => l.jurisdictionCode);
+
   const matched = explicit.length
     ? explicit
-    : all
-        .filter((j) => {
-          const q = query.toLowerCase();
-          return (
-            q.includes(j.name.toLowerCase()) ||
-            q.includes(j.shortName.toLowerCase()) ||
-            new RegExp(`\\b${j.code.toLowerCase()}\\b`).test(q)
-          );
-        })
-        .map((j) => j.code);
+    : Array.from(new Set([...byJurisdiction, ...byLaw]));
 
   // Nothing matched — ground in the whole (small) directory rather than
   // sending an empty context and inviting invention.

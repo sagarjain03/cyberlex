@@ -14,6 +14,9 @@ import { SourceList } from "@/components/shared/source-list";
 import { Disclaimer } from "@/components/ui/disclaimer";
 import { getAiCrimeBySlug, getAiCrimeSlugs } from "@/lib/data";
 
+/** Fixed technique set — see the note in app/jurisdictions/[code]/page.tsx. */
+export const dynamicParams = false;
+
 export async function generateStaticParams() {
   const slugs = await getAiCrimeSlugs();
   return slugs.map((slug) => ({ slug }));

@@ -27,6 +27,14 @@ import { cn } from "@/lib/utils";
 import { AI_POSTURE_LABEL, REGION_LABEL, absentLabel, isKnown } from "@/types";
 import type { Known } from "@/types";
 
+/**
+ * The tracked set is fixed and fully enumerated below, so any other code is a
+ * genuine 404. Without this, Next renders `notFound()` on demand and then
+ * *prerenders and caches* the result — serving the 404 page with HTTP 200,
+ * a soft 404 that search engines penalise.
+ */
+export const dynamicParams = false;
+
 export async function generateStaticParams() {
   const codes = await getJurisdictionCodes();
   return codes.map((code) => ({ code: code.toLowerCase() }));

@@ -40,14 +40,20 @@ The product is dark-only.
 
 ### 1.2 Ink — warm neutral
 
-| Token | Hex | Contrast on black | Use |
-|-------|-----|-------------------|-----|
-| `--color-bone` | `#F2EFE9` | ~18.5:1 | ⭐ Brand + interactive. Active nav, primary buttons, focus ring, key figures. |
-| `--color-ink-100` | `#E8E5DF` | ~17.2:1 | Body, headings |
-| `--color-ink-300` | `#A6A29B` | ~8.6:1 | Secondary text, descriptions |
-| `--color-ink-500` | `#726E68` | ~4.5:1 | Labels, meta. At the AA floor — never for legal facts. |
-| `--color-ink-700` | `#46433F` | ~2.2:1 | ⚠️ Fails AA. Decorative only: ISO codes beside a named row, inactive ticks. |
-| `--color-ink-900` | `#26241F` | — | Structural fills only, never text |
+**Every step that carries text passes WCAG AA (4.5:1)**, measured against the darkest surface it actually appears on (`#0A0A0B`) — not against pure black, and not by estimate.
+
+| Token | Hex | Measured | Use |
+|-------|-----|----------|-----|
+| `--color-bone` | `#F2EFE9` | 18.4:1 | ⭐ Brand + interactive. Active nav, primary buttons, focus ring, key figures. |
+| `--color-ink-100` | `#E8E5DF` | 16.9:1 | Body, headings |
+| `--color-ink-300` | `#A6A29B` | 7.8:1 | Secondary text, descriptions |
+| `--color-ink-500` | `#8C877E` | 5.5:1 | Labels, meta |
+| `--color-ink-700` | `#7F7A72` | 4.6:1 | Dimmest text step — statute years, citations, column labels |
+| `--color-ink-900` | `#26241F` | — | Structural fills only. **Never text.** |
+
+> **Corrected in Phase 8.** The original ramp put `ink-500` at 4.15:1 and `ink-700` at 2.14:1, with `ink-700` documented as "decorative only". An automated sweep found it used for **67 pieces of text and zero decorations** — including statute years, which are legal facts. Both tokens were lightened rather than the 67 usages rewritten, because the token was wrong, not the usage. `--color-null` was lightened from `#5F5C57` (2.9:1) to `#8F8A82` (5.8:1) for the same reason: "Not researched" is a substantive claim, not a muted decoration.
+>
+> **Never estimate a contrast ratio.** Measure it against the composited background, per route.
 
 ### 1.3 Data semantics — muted, not neon
 

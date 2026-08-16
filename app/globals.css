@@ -20,12 +20,17 @@
   --color-rule-strong: #2c2c31;
 
   /* ── Ink: warm neutral, never blue-grey ────────────────────────────────── */
-  --color-bone: #f2efe9;
-  --color-ink-100: #e8e5df;
-  --color-ink-300: #a6a29b;
-  --color-ink-500: #726e68;
-  --color-ink-700: #46433f;
-  --color-ink-900: #26241f;
+  /* Every step that carries text passes WCAG AA (4.5:1) against the darkest
+     surface it is used on (#0A0A0B). Measured, not assumed: the original ramp
+     put ink-500 at 4.15:1 and ink-700 at 2.14:1 — and ink-700 turned out to be
+     used for 67 pieces of text and zero decorations, including statute years.
+     ink-900 is structural fill only and never carries text. */
+  --color-bone: #f2efe9; /* 18.4:1 */
+  --color-ink-100: #e8e5df; /* 16.9:1 */
+  --color-ink-300: #a6a29b; /* 7.8:1  */
+  --color-ink-500: #8c877e; /* 5.5:1  */
+  --color-ink-700: #7f7a72; /* 4.6:1  */
+  --color-ink-900: #26241f; /* fills only — never text */
 
   /* ── Data semantics: muted, expensive — not neon ───────────────────────── */
   --color-live: #4cc38a; /* in force */
@@ -40,7 +45,9 @@
   --color-synthetic-dim: #372a56;
   --color-critical: #e5484d; /* severe / no coverage */
   --color-critical-dim: #551b1e;
-  --color-null: #5f5c57; /* repealed / unresearched */
+  /* Lightened from #5F5C57 (2.9:1). "Not researched" is a substantive legal
+     claim, not a muted decoration, and has to be as readable as any other. */
+  --color-null: #8f8a82; /* repealed / unresearched — 5.8:1 */
   --color-null-dim: #2a2926;
 
   /* ── Type ──────────────────────────────────────────────────────────────── */

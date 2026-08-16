@@ -15,9 +15,11 @@
 
 ## Current Status
 
-**Phase:** 0–7 complete → Phase 8 next (polish, a11y, performance, deploy)
+**Phase:** 0–8 complete. **v1 feature-complete, audited, and verified live — not launch-ready** (one gate remains, see below).
 
-**⚠️ Blocked on environment, not code:** Groq returns `403 "Access denied. Please check your network settings."` from this machine — for `chat.completions` *and* `models.list`. That is a **network-origin block** (VPN / datacenter exit IP), not a bad key or model access. The integration is verified as far as the network allows; **one live end-to-end success still needs to be observed with the VPN off.**
+**✅ Assistant verified end to end (2026-08-16, VPN off).** 200 in ~2.5s. All five example prompts return in-scope, high/medium confidence, correctly grounded. Out-of-scope and low-confidence paths behave. Critically, asking for Japan's reporting deadline — which our data marks `NOT_RESEARCHED` — produced *"not established in the provided context"* rather than an invented figure. The anti-hallucination design works against real output, not just fixtures.
+
+The earlier Groq `403 "Access denied — check your network settings"` was confirmed to be a **network-origin block** (VPN exit IP), not credentials or model access. Worth remembering: the same symptom will reappear on any blocked IP with a perfectly valid key.
 **Last session:** 2026-08-15
 **Build health:** `tsc --noEmit` ✅ · `eslint` ✅ · `next build` ✅ (static) · 0 console errors · no overflow at 375px · map absent from client bundle ✅ · data-boundary ESLint rule verified firing ✅
 **Blockers:** none
@@ -30,6 +32,9 @@
 
 | Date | Item | Notes |
 |------|------|-------|
+| 2026-08-16 | **`dynamicParams = false` on both dynamic routes** | Production-mode testing (not dev) revealed `/jurisdictions/zz` and `/ai-crimes/nope` returning **HTTP 200** with `x-nextjs-prerender: 1`. Next rendered `notFound()` on demand, then prerendered and cached the result — a soft 404, which search engines penalise. Both param sets are fully enumerated by `generateStaticParams`, so closing the route is correct. **Dev mode does not reproduce this — always smoke-test `npm start`, not just `npm run dev`.** |
+| 2026-08-16 | **Live verification pass** | Fixed two real defects found only by running it: grounding context ignored law names, and `groundedOn.jurisdictions` was trusted rather than derived. All 5 example prompts, out-of-scope, low-confidence and `NOT_RESEARCHED` honesty verified against live output; assistant UI visually confirmed. |
+| 2026-08-16 | **Phase 8 — polish, a11y, performance** | `app/icon.tsx`, `app/opengraph-image.tsx`, `README.md` rewritten. Automated sweep (11 routes × 5 viewports): overflow 0 · a11y structure 0 · contrast 0 · reduced-motion 0. Security gate re-run: 0 hits. Client JS 840 KB total chunks. |
 | 2026-08-16 | **Phase 7 — AI Summarizer + Groq** | `lib/env.ts`, `lib/rate-limit.ts`, `lib/ai/{config,client,errors,schema,prompt,summarize}.ts`, `app/api/summarize/route.ts`, `app/api/health/route.ts`, `hooks/use-summarize.ts`, `AssistantConsole` + `SummaryResult`. Installed `groq-sdk`, `zod`, `server-only`. **Security gate passed** (see below). |
 | 2026-08-15 | **Phase 6 — AI Crimes** | `app/ai-crimes/page.tsx` + `[slug]/` (page + not-found, 6 SSG paths); `CoverageMatrixTable` (Server Component, zero client JS), `CrimeList`, `StatuteMapping`, `TechnicalProfile`. 60 cells: 30 direct · 20 analogical · 5 no-coverage · 5 not-researched. |
 | 2026-08-15 | **Phase 5 — Tracker** | `app/tracker/page.tsx`; `StagePipeline`, `DraftEntry`, `CommencementStatus`, `PhaseSchedule` (extracted + shared), `TrackerFilters`; `parseDraftFilters`. 12 instruments across 5 populated stages; 6 passed-but-inert. 7 filter permutations verified; no overflow at 375px. |
@@ -70,20 +75,29 @@ Format:
 
 ## Next Up
 
-**Phase 8 — Polish, accessibility, performance, deploy** (`docs/phases.md` §Phase 8).
+All eight build phases are complete. What remains is **not engineering**:
 
-**Carry-over from Phase 7, do first:**
-- One live end-to-end assistant success with the VPN off — the only unverified link in the chain
-- Failure modes 2, 4, 13 (upstream 429 / 5xx / transport) against a stub server
+### Blocks presenting it as authoritative — not deployment
+1. ⚠️ **Verify the 65 records against their primary sources.** Until `needsReview` reads 0, the product must not be described as authoritative, citable, or a compliance tool.
 
-**Phase 8 proper:**
-- Full a11y audit (`docs/rules.md` §5): keyboard traversal, screen-reader pass on `/`, `/compare`, `/assistant`, contrast on real composited backgrounds, reduced-motion
-- Responsiveness sweep at 320/375/768/1024/1440 — **measure `documentElement.scrollWidth` on every route**, do not eyeball it
-- `app/icon.tsx`, `app/opengraph-image.tsx`
-- Lighthouse mobile: Perf ≥ 90, A11y ≥ 95, Best Practices ≥ 95
-- Re-run the client-bundle key grep as the launch gate (passed once already, 2026-08-16)
-- Rewrite `README.md`; deploy with production env vars
-- ⚠️ **The 65-record verification gate is still open and still blocks launch** — see Current Status
+   **This does not block shipping it as a demo/portfolio project**, because the honesty machinery is already built in and visible: the unverified count sits in the masthead on every page, `/methodology` explains exactly what it means, every module carries a non-dismissible disclaimer, and unresearched figures render as gaps rather than guesses. Deployed as-is, the product tells the truth about itself.
+
+   **Partial verification is supported and does not require a lawyer.** `verification` is per-record, so anyone can verify a subset by reading the cited primary source carefully — EUR-Lex and legislation.gov.uk are plain text. That is careful reading, not legal judgement. Flip individual records to `"verified"` as they are checked; the masthead count falls automatically. Procedure in `data/README.md`.
+
+   A lawyer is needed only for records where the *interpretation* is contestable — chiefly the `analogical` coverage claims in `data/ai-crimes.ts` and the strictness dimension scores.
+
+### Blocks "done", not launch
+2. ~~Live assistant call~~ ✅ **Verified 2026-08-16** — see Current Status.
+3. **Failure modes 2, 4, 13** (upstream 429 / 5xx / transport) — implemented and reviewed, never triggered live. A stub server would close these.
+4. **Deploy.** Not done — outward-facing, and awaiting the owner's call on host and timing. Set the env vars from `.env.example`; `GROQ_API_KEY` is the only required one and only for `/assistant`.
+
+### Worth doing, not blocking
+5. Real Lighthouse run against a production build (the local sweep covers a11y and layout, not Core Web Vitals).
+6. Screen-reader pass with an actual screen reader — the sweep checks structure, which is necessary but not sufficient.
+7. Swap the in-memory rate limiter for a shared store before running more than one instance.
+
+### If picking this up cold
+Read `README.md`, then `docs/rules.md` §4 before touching the AI path. The three traps that cost real time: stale Turbopack cache causing phantom 404s (`rm -rf .next`), `position: relative` required on horizontal scrollers, and contrast that must be measured rather than estimated. All three are documented in the decisions log below.
 
 <details><summary>Phase 7 verification log (what was actually exercised)</summary>
 
@@ -135,6 +149,12 @@ Format:
 | 2026-08-14 | Dark-only; no light theme | Per `docs/prd.md` §6. The design system depends on lit accents against a near-black ground. |
 | 2026-08-14 | Status hues and strictness-ramp hues are kept in separate component vocabularies | Cyan means both "in force" and "moderate strictness"; keeping badges and meters visually disjoint removes the ambiguity (`docs/design.md` §1.4). |
 | 2026-08-14 | AI response is a single validated object, not a token stream, in v1 | Schema validation before render is the hallucination guard; streaming would mean rendering unvalidated partial output. Streaming is a v2 candidate. |
+| 2026-08-16 | **Grounding context now matches law names, not just jurisdiction names** (`lib/ai/prompt.ts`) | "Is the DPDP Act enforceable yet?" — one of our own example chips — returned **out of scope**. The query names no country, so it fell through to the alphabetical fallback (AU/BR/CN/EU) and India was never in the context. The model was right; the retrieval was wrong. Now matches `shortTitle`, `citation`, and acronyms. **A demo path can be broken while every unit-level check passes.** |
+| 2026-08-16 | `groundedOn` is resolved against real records, not trusted | The model frequently cites correct `lawIds` but leaves `jurisdictions` empty, silently dropping the "Grounded on" links from a well-grounded answer. Jurisdictions are now derived from the cited laws, and both lists filtered against real ids — which also kills the hallucinated-link risk. |
+| 2026-08-16 | **The ink ramp failed AA and the docs said otherwise** — `ink-500` 4.15:1, `ink-700` 2.14:1, `null` 2.9:1; all lightened | `design.md` claimed ink-500 was "~4.5:1" and ink-700 was "decorative only". An automated sweep found ink-700 used for **67 pieces of text and 0 decorations**, including statute years. Fixed the *tokens*, not the 67 usages, because the token was wrong. **Never estimate a contrast ratio — measure it against the composited background.** |
+| 2026-08-16 | Accessibility and layout verified by script, not by eye | Overflow, heading structure, labels, focus order, contrast and reduced-motion are all invisible to screenshots. The 320px overflow case and the whole contrast failure class had been passing visual review for six phases. |
+| 2026-08-16 | `EmptyState`/`ErrorState` headline is `h2`, not `h3` | On the 404 pages it sits directly under the page `h1`, so `h3` was a heading-level skip. `h2` is correct in both contexts (under an `h1`, or beside a `Section`'s `h2`). |
+| 2026-08-16 | Assistant textarea keeps `outline-none` | Verified the replacement is real: the container hairline goes bone (18:1) on `focus-within`. Documented inline so it is not "fixed" by deleting the class. |
 | 2026-08-16 | **`GROQ_MODEL` default is `openai/gpt-oss-120b`** (open question #2, resolved) | `llama-3.3-70b-versatile` — the default this project had documented since Phase 0 — was deprecated on 17 June 2026 for free/developer tiers. Shipping it would have made every request fail. Verified against Groq's live catalogue rather than assumed. |
 | 2026-08-16 | `response_format: json_object`, **never** `json_schema` | `json_schema` enforcement is reported to be silently ignored on gpt-oss models, returning free-form prose. The zod-validate + one-repair design already assumed the provider might not keep its promise; this confirmed it. |
 | 2026-08-16 | The model's `groundedOn.jurisdictions` is filtered against real codes, not cast | Caught by the compiler. The model can name any string; casting would have rendered an in-app link built from a hallucination. |

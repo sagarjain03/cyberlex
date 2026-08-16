@@ -117,7 +117,9 @@ export function DirectoryFilters({ resultCount }: { resultCount: number }) {
           className="text-code text-ink-500 transition-colors hover:text-bone"
         >
           {activeCount > 0 ? `${activeCount} filter${activeCount > 1 ? "s" : ""}` : sortLabel}
-          <span aria-hidden="true"> {open ? "↑" : "↓"}</span>
+          {/* ▾/▴ rather than ↓/↑: the sort labels already end in an arrow, and
+              two of them side by side read as "Strictness ↓ ↓". */}
+          <span aria-hidden="true"> {open ? "▴" : "▾"}</span>
         </button>
       </div>
 
